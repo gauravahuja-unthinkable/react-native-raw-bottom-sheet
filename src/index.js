@@ -27,11 +27,12 @@ const SUPPORTED_COMPONENTS_CLOSEONDRAGDOWN = [
 class RBSheet extends Component {
   constructor(props) {
     super(props);
+    const {hasScrollView} = this.props;
     this.state = {
       modalVisible: false,
       animatedHeight: new Animated.Value(0),
       pan: new Animated.ValueXY(),
-      hasScrollView: false
+      hasScrollView: hasScrollView !== undefined ? hasScrollView : false,
     };
 
     this.createPanResponder(props);
