@@ -19,19 +19,39 @@ const SUPPORTED_ORIENTATIONS = [
   "landscape-right"
 ];
 
+const SUPPORTED_COMPONENTS_CLOSEONDRAGDOWN = [
+  'ScrollView',
+  'FlatList',
+];
+
 class RBSheet extends Component {
   constructor(props) {
     super(props);
     this.state = {
       modalVisible: false,
       animatedHeight: new Animated.Value(0),
-      pan: new Animated.ValueXY()
+      pan: new Animated.ValueXY(),
+      hasScrollView: false
     };
 
     this.createPanResponder(props);
   }
 
-  setModalVisible(visible, additionnalData = null) {
+  componentDidMount(){
+    let children = this.props.children;
+    if(children.length > 0){
+      for (var i = 0; i < children.length; i++) {
+        let childrenName = children[i].type ? children[i].type.displayName || null : null;
+        if(SUPPORTED_COMPONENTS_CLOSEONDRAGDOWN.includes(childrenName)){
+          this.setState({
+            hasScrollView: true
+          });
+        }
+      }
+    }
+  }
+
+  setModalVisible(visible) {
     const { height, minClosingHeight, duration, onClose, onOpen } = this.props;
     const { animatedHeight, pan } = this.state;
     if (visible) {
@@ -95,10 +115,18 @@ class RBSheet extends Component {
       customStyles,
       keyboardAvoidingViewEnabled
     } = this.props;
-    const { animatedHeight, pan, modalVisible } = this.state;
+    const { animatedHeight, pan, modalVisible, hasScrollView } = this.state;
     const panStyle = {
       transform: pan.getTranslateTransform()
     };
+
+    let draggableIcon = (closeOnDragDown && hasScrollView ? (
+      <View {...this.panResponder.panHandlers} style={styles.draggableContainer}>
+        <View style={[styles.draggableIcon, customStyles.draggableIcon]} />
+      </View>
+    ) : closeOnDragDown ? <View style={styles.draggableContainer}>
+      <View style={[styles.draggableIcon, customStyles.draggableIcon]} />
+    </View> : null)
 
     return (
       <Modal
@@ -120,17 +148,24 @@ class RBSheet extends Component {
             activeOpacity={1}
             onPress={() => (closeOnPressMask ? this.close() : null)}
           />
+        {
+          closeOnDragDown && hasScrollView ? (
+            <Animated.View
+              style={[panStyle, styles.container, { height: animatedHeight }, customStyles.container]}
+            >
+              {draggableIcon}
+              {children}
+            </Animated.View>
+          ) : (
           <Animated.View
             {...this.panResponder.panHandlers}
             style={[panStyle, styles.container, { height: animatedHeight }, customStyles.container]}
           >
-            {closeOnDragDown && (
-              <View style={styles.draggableContainer}>
-                <View style={[styles.draggableIcon, customStyles.draggableIcon]} />
-              </View>
-            )}
+            {draggableIcon}
             {children}
-          </Animated.View>
+          </Animated.View>)
+        }
+
         </KeyboardAvoidingView>
       </Modal>
     );
