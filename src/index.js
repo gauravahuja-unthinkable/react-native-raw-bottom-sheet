@@ -57,7 +57,7 @@ class RBSheet extends Component {
     const { animatedHeight, pan } = this.state;
     if (visible) {
       this.setState({ modalVisible: visible });
-      if (typeof onOpen === "function") onOpen(additionnalData);
+      if (typeof onOpen === "function") onOpen();
       Animated.timing(animatedHeight, {
         toValue: height,
         duration
